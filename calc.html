@@ -1,0 +1,1056 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>정산기</title>
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #f4f1eb;
+  --surface:  #ede9e0;
+  --card:     #ffffff;
+  --border:   #ddd8cc;
+  --border2:  #c8c2b4;
+  --accent:   #2b5ce6;
+  --accent-h: #1a45c4;
+  --danger:   #e63946;
+  --success:  #2d7d46;
+  --text:     #1a1a1a;
+  --muted:    #7a7670;
+  --tag-bg:   #e8e3d8;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Pretendard', 'Noto Sans KR', sans-serif;
+  min-height: 100vh;
+  padding: 48px 20px 100px;
+}
+
+/* 배경 패턴 */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: radial-gradient(circle, #c8c2b4 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: 0.35;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.wrap {
+  max-width: 580px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* ── 헤더 ── */
+.header {
+  margin-bottom: 44px;
+}
+.header-eyebrow {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 4px;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.header h1 {
+  font-size: 48px;
+  font-weight: 900;
+  letter-spacing: -2px;
+  line-height: 1;
+  color: var(--text);
+}
+.header h1 em {
+  font-style: normal;
+  color: var(--accent);
+}
+.header p {
+  margin-top: 12px;
+  font-size: 14px;
+  color: var(--muted);
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+/* ── 카드 ── */
+.card {
+  background: var(--card);
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  padding: 28px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+}
+.card-title {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.card-title .step {
+  width: 22px; height: 22px;
+  background: var(--accent);
+  color: #fff;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  letter-spacing: 0;
+  flex-shrink: 0;
+}
+
+/* ── 기본 입력 ── */
+.input-row {
+  display: flex;
+  gap: 8px;
+}
+.inp {
+  flex: 1;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 500;
+  padding: 12px 14px;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+.inp:focus { border-color: var(--accent); background: #fff; }
+.inp::placeholder { color: #b0ab9f; font-weight: 400; font-size: 14px; }
+.inp-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 16px;
+}
+.inp-num::-webkit-outer-spin-button,
+.inp-num::-webkit-inner-spin-button { -webkit-appearance: none; }
+.inp-num { -moz-appearance: textfield; }
+
+/* ── 버튼 ── */
+.btn-add {
+  width: 46px; height: 46px;
+  border: none;
+  border-radius: 12px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 22px;
+  font-weight: 300;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.15s, transform 0.1s;
+  line-height: 1;
+}
+.btn-add:hover { background: var(--accent-h); }
+.btn-add:active { transform: scale(0.93); }
+
+/* ── 태그 ── */
+.tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  min-height: 10px;
+}
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--tag-bg);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 5px 10px 5px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  animation: popIn 0.18s cubic-bezier(0.34,1.56,0.64,1);
+}
+.tag-del {
+  width: 17px; height: 17px;
+  border-radius: 50%;
+  border: none;
+  background: var(--border2);
+  color: var(--muted);
+  font-size: 10px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.1s, color 0.1s;
+  padding: 0;
+}
+.tag-del:hover { background: var(--danger); color: #fff; }
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.6); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+.count-hint {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.count-hint b { color: var(--accent); font-weight: 700; }
+
+/* ── 항목 리스트 (정산/공제) ── */
+.item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+/* 정산 항목 행 */
+.cost-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+  animation: popIn 0.18s cubic-bezier(0.34,1.56,0.64,1);
+}
+.cost-item .item-label {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cost-item .item-amount {
+  font-family: 'DM Mono', monospace;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--accent);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.cost-item .item-del {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--border2);
+  font-size: 14px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.1s, color 0.1s;
+  padding: 0;
+}
+.cost-item .item-del:hover { background: #fce8ea; color: var(--danger); }
+
+/* 공제 항목 행 */
+.deduct-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+.deduct-form .row2 {
+  display: flex;
+  gap: 8px;
+}
+.select-wrap {
+  position: relative;
+  flex: 1;
+}
+.select-wrap select {
+  width: 100%;
+  appearance: none;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  padding: 12px 36px 12px 14px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+.select-wrap select:focus { border-color: var(--accent); }
+.select-wrap::after {
+  content: '▾';
+  position: absolute;
+  right: 13px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.deduct-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff5f5;
+  border: 1px solid #f7c5c9;
+  border-radius: 12px;
+  padding: 12px 14px;
+  animation: popIn 0.18s cubic-bezier(0.34,1.56,0.64,1);
+}
+.deduct-item .item-label {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+}
+.deduct-item .item-name-badge {
+  font-size: 11px;
+  font-weight: 700;
+  background: #fce8ea;
+  color: var(--danger);
+  border-radius: 6px;
+  padding: 2px 7px;
+  flex-shrink: 0;
+}
+.deduct-item .item-amount {
+  font-family: 'DM Mono', monospace;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--danger);
+  flex-shrink: 0;
+}
+.deduct-item .item-del {
+  width: 22px; height: 22px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #f7c5c9;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.1s, color 0.1s;
+  padding: 0;
+}
+.deduct-item .item-del:hover { background: #fce8ea; color: var(--danger); }
+
+.empty-hint {
+  font-size: 13px;
+  color: #b0ab9f;
+  text-align: center;
+  padding: 10px 0 4px;
+}
+
+/* ── 계산 버튼 ── */
+.calc-btn {
+  width: 100%;
+  padding: 18px;
+  border: none;
+  border-radius: 16px;
+  background: var(--accent);
+  color: #fff;
+  font-family: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  margin-top: 8px;
+  transition: background 0.15s, transform 0.1s;
+}
+.calc-btn:hover { background: var(--accent-h); }
+.calc-btn:active { transform: scale(0.98); }
+
+/* ── 에러 ── */
+.error-msg {
+  font-size: 12px;
+  color: var(--danger);
+  margin-top: 8px;
+  display: none;
+  font-weight: 500;
+}
+.error-msg.show { display: block; }
+
+/* ── 결과 카드 ── */
+.result-card {
+  background: var(--text);
+  border-radius: 24px;
+  padding: 32px 28px;
+  margin-top: 20px;
+  display: none;
+  animation: slideUp 0.3s cubic-bezier(0.22,1,0.36,1);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+}
+.result-card.show { display: block; }
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.result-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: #666;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.result-title {
+  font-size: 26px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -0.5px;
+  margin-bottom: 24px;
+}
+
+/* 요약 줄 */
+.result-summary {
+  display: flex;
+  gap: 0;
+  margin-bottom: 24px;
+  border: 1px solid #333;
+  border-radius: 14px;
+  overflow: hidden;
+}
+.summary-item {
+  flex: 1;
+  padding: 14px 16px;
+  border-right: 1px solid #333;
+}
+.summary-item:last-child { border-right: none; }
+.summary-item .s-label {
+  font-size: 11px;
+  color: #666;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.summary-item .s-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 17px;
+  font-weight: 500;
+  color: #fff;
+}
+
+/* 인원별 결과 */
+.result-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: #555;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.person-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.person-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: #222;
+  animation: slideUp 0.3s ease both;
+}
+.person-row:nth-child(1) { animation-delay: 0.05s; }
+.person-row:nth-child(2) { animation-delay: 0.09s; }
+.person-row:nth-child(3) { animation-delay: 0.13s; }
+.person-row:nth-child(4) { animation-delay: 0.17s; }
+.person-row:nth-child(5) { animation-delay: 0.21s; }
+.person-row:nth-child(6) { animation-delay: 0.25s; }
+.person-row:nth-child(7) { animation-delay: 0.29s; }
+.person-row:nth-child(8) { animation-delay: 0.33s; }
+
+.person-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.person-num {
+  width: 26px; height: 26px;
+  border-radius: 8px;
+  background: #333;
+  color: #888;
+  font-size: 11px;
+  font-weight: 700;
+  font-family: 'DM Mono', monospace;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.person-name {
+  font-size: 15px;
+  font-weight: 700;
+  color: #fff;
+}
+.person-deduct-badge {
+  font-size: 11px;
+  background: #3d1a1d;
+  color: #f87f8a;
+  border-radius: 6px;
+  padding: 2px 7px;
+  font-weight: 600;
+}
+.person-amount {
+  font-family: 'DM Mono', monospace;
+  font-size: 20px;
+  font-weight: 500;
+  color: #fff;
+}
+.person-amount.reduced {
+  color: #f87f8a;
+}
+.person-amount .won-unit {
+  font-size: 13px;
+  color: #555;
+  margin-left: 2px;
+}
+
+.result-note {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #2a2a2a;
+}
+.note-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: #555;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.note-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-radius: 10px;
+  margin-bottom: 6px;
+  background: #1a1a1a;
+}
+.note-row:last-child { margin-bottom: 0; }
+.note-row .n-label {
+  font-size: 13px;
+  color: #666;
+  font-family: 'DM Mono', monospace;
+}
+.note-row .n-val {
+  font-size: 13px;
+  font-weight: 600;
+  color: #aaa;
+  font-family: 'DM Mono', monospace;
+}
+.note-row.highlight {
+  background: #1e1a00;
+  border: 1px solid #4a3800;
+}
+.note-row.highlight .n-label { color: #887040; }
+.note-row.highlight .n-val   { color: #ffb347; font-weight: 700; }
+.note-row.deduct-row {
+  background: #1a0d0f;
+  border: 1px solid #3d1a1d;
+}
+.note-row.deduct-row .n-label { color: #7a3a40; }
+.note-row.deduct-row .n-val   { color: #f87f8a; font-weight: 700; }
+
+/* ── 초기화 버튼 ── */
+.reset-btn {
+  width: 100%;
+  padding: 14px;
+  border: 1.5px solid var(--border2);
+  border-radius: 12px;
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 12px;
+  transition: border-color 0.15s, color 0.15s;
+}
+.reset-btn:hover { border-color: var(--text); color: var(--text); }
+
+/* ── 모바일 반응형 ── */
+@media (max-width: 480px) {
+  body { padding: 24px 14px 80px; }
+
+  .header h1 { font-size: 36px; }
+
+  .card { padding: 20px 16px; }
+
+  /* 정산 항목: 항목명+금액+버튼을 2줄로 */
+  #costRow {
+    flex-wrap: wrap;
+  }
+  #costRow #costLabel  { flex: 1 1 100%; }
+  #costRow #costAmount { flex: 1 1 calc(100% - 58px); }
+
+  /* 공제 섹션: 세로 배치 */
+  .deduct-form .row2 {
+    flex-wrap: wrap;
+  }
+  .deduct-form .row2 .select-wrap { flex: 1 1 100%; }
+  .deduct-form .row2 #deductAmount { flex: 1 1 calc(100% - 58px); max-width: none !important; }
+
+  /* 버튼 터치 영역 확보 */
+  .btn-add { width: 46px; height: 46px; min-width: 46px; }
+
+  /* 결과 요약 글자 크기 */
+  .summary-item .s-val { font-size: 14px; }
+  .summary-item .s-label { font-size: 10px; }
+
+  /* 인원별 결과 */
+  .person-amount { font-size: 16px; }
+  .person-name   { font-size: 13px; }
+
+  /* 배지 줄바꿈 허용 */
+  .person-left { flex-wrap: wrap; gap: 6px; }
+
+  /* 분배 내역 */
+  .note-row .n-label,
+  .note-row .n-val { font-size: 11px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 헤더 -->
+  <div class="header">
+    <h1><em>정산기</em></h1>
+  </div>
+
+  <!-- STEP 1 인원 -->
+  <div class="card">
+    <div class="card-title"><span class="step">1</span> 인원 등록</div>
+    <div class="input-row">
+      <input class="inp" type="text" id="nameInput" placeholder="이름을 입력하세요" maxlength="10" lang="ko" inputmode="text">
+      <button class="btn-add" id="btnAddName">+</button>
+    </div>
+    <div class="tags" id="nameTags"></div>
+    <div class="count-hint" id="nameHint">현재 <b>0</b>명 등록됨</div>
+  </div>
+
+  <!-- STEP 2 정산 항목 -->
+  <div class="card">
+    <div class="card-title"><span class="step">2</span> 정산 항목</div>
+    <div class="input-row" id="costRow">
+      <input class="inp" type="text" id="costLabel" placeholder="항목명 (예: 숙박, 식사, 렌터카)" maxlength="20" lang="ko" inputmode="text">
+      <input class="inp inp-num" type="text" inputmode="numeric" id="costAmount" placeholder="금액">
+      <button class="btn-add" id="btnAddCost">+</button>
+    </div>
+    <div class="item-list" id="costList">
+      <div class="empty-hint" id="costEmpty">추가된 항목이 없습니다</div>
+    </div>
+  </div>
+
+  <!-- STEP 3 공제 항목 -->
+  <div class="card">
+    <div class="card-title"><span class="step">3</span> 공제 항목 <span style="font-size:11px;font-weight:400;letter-spacing:0;text-transform:none;color:#b0ab9f;">(선택 · 특정 인원 부담금 차감)</span></div>
+    <div class="deduct-form">
+      <div class="input-row">
+        <input class="inp" type="text" id="deductLabel" placeholder="공제 사유 (예: 쿠폰 사용, 사전 결제)" maxlength="20" lang="ko" inputmode="text">
+      </div>
+      <div class="row2">
+        <div class="select-wrap">
+          <select id="deductName">
+            <option value="">— 공제 대상 선택 —</option>
+          </select>
+        </div>
+        <input class="inp inp-num" type="text" inputmode="numeric" id="deductAmount" placeholder="공제 금액" style="max-width:140px;">
+        <button class="btn-add" id="btnAddDeduct" style="background:#e63946;">−</button>
+      </div>
+    </div>
+    <div class="item-list" id="deductList">
+      <div class="empty-hint" id="deductEmpty">추가된 공제 항목이 없습니다</div>
+    </div>
+  </div>
+
+  <div class="error-msg" id="errorMsg"></div>
+  <button class="calc-btn" id="btnCalc">✦ 정산 계산하기</button>
+
+  <!-- 결과 -->
+  <div class="result-card" id="resultCard">
+    <div class="result-eyebrow">Settlement Result</div>
+    <div class="result-title">정산 결과</div>
+
+    <div class="result-summary">
+      <div class="summary-item">
+        <div class="s-label">총 비용</div>
+        <div class="s-val" id="rTotal">—</div>
+      </div>
+      <div class="summary-item">
+        <div class="s-label">총 공제</div>
+        <div class="s-val" id="rDeduct">—</div>
+      </div>
+      <div class="summary-item">
+        <div class="s-label">인원</div>
+        <div class="s-val" id="rCount">—</div>
+      </div>
+    </div>
+
+    <div class="result-section-label">인원별 최종 부담금</div>
+    <div class="person-rows" id="personRows"></div>
+    <div class="result-note" id="rNote"></div>
+  </div>
+
+  <button class="reset-btn" id="btnReset">↺ 전체 초기화</button>
+
+</div>
+<script>
+let names   = [];
+let costs   = [];
+let deducts = [];
+
+/* ─── 유틸 ─── */
+const fmt = n => Math.abs(n).toLocaleString('ko-KR');
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = '⚠ ' + msg;
+  el.classList.add('show');
+}
+function clearError() {
+  document.getElementById('errorMsg').classList.remove('show');
+}
+function hideResult() {
+  document.getElementById('resultCard').classList.remove('show');
+}
+
+/* ─── STEP 1: 인원 ─── */
+function addName() {
+  const inp  = document.getElementById('nameInput');
+  const name = inp.value.trim();
+  if (!name) return;
+  if (names.includes(name)) { showError(`"${name}"은(는) 이미 등록되어 있습니다.`); return; }
+  names.push(name);
+  inp.value = '';
+  clearError();
+  renderNames();
+  updateDeductSelect();
+  hideResult();
+}
+
+function removeName(i) {
+  const removed = names[i];
+  names.splice(i, 1);
+  deducts = deducts.filter(d => d.name !== removed);
+  renderNames();
+  renderDeducts();
+  updateDeductSelect();
+  hideResult();
+}
+
+function renderNames() {
+  document.getElementById('nameTags').innerHTML =
+    names.map((n, i) => `
+      <span class="tag">
+        ${n}
+        <button class="tag-del" data-idx="${i}">✕</button>
+      </span>`).join('');
+  document.getElementById('nameHint').innerHTML = `현재 <b>${names.length}</b>명 등록됨`;
+}
+
+/* ─── STEP 2: 정산 항목 ─── */
+function addCost() {
+  const label  = document.getElementById('costLabel').value.trim();
+  const amount = parseInt(document.getElementById('costAmount').value) || 0;
+  if (!label)      { showError('항목명을 입력해 주세요.'); return; }
+  if (amount <= 0) { showError('금액은 1원 이상 입력해 주세요.'); return; }
+  costs.push({ label, amount });
+  document.getElementById('costLabel').value  = '';
+  document.getElementById('costAmount').value = '';
+  clearError();
+  renderCosts();
+  hideResult();
+}
+
+function removeCost(i) {
+  costs.splice(i, 1);
+  renderCosts();
+  hideResult();
+}
+
+function renderCosts() {
+  const list = document.getElementById('costList');
+  if (costs.length === 0) {
+    list.innerHTML = '<div class="empty-hint">추가된 항목이 없습니다</div>';
+    return;
+  }
+  list.innerHTML = costs.map((c, i) => `
+    <div class="cost-item">
+      <span class="item-label">${c.label}</span>
+      <span class="item-amount">${fmt(c.amount)} 원</span>
+      <button class="item-del" data-idx="${i}">✕</button>
+    </div>`).join('');
+}
+
+/* ─── STEP 3: 공제 항목 ─── */
+function updateDeductSelect() {
+  const sel = document.getElementById('deductName');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— 공제 대상 선택 —</option>' +
+    names.map(n => `<option value="${n}" ${n === cur ? 'selected' : ''}>${n}</option>`).join('');
+}
+
+function addDeduct() {
+  const label  = document.getElementById('deductLabel').value.trim();
+  const name   = document.getElementById('deductName').value;
+  const amount = parseInt(document.getElementById('deductAmount').value) || 0;
+  if (!label)      { showError('공제 사유를 입력해 주세요.'); return; }
+  if (!name)       { showError('공제 대상을 선택해 주세요.'); return; }
+  if (amount <= 0) { showError('공제 금액은 1원 이상 입력해 주세요.'); return; }
+  deducts.push({ label, name, amount });
+  document.getElementById('deductLabel').value  = '';
+  document.getElementById('deductName').value   = '';
+  document.getElementById('deductAmount').value = '';
+  clearError();
+  renderDeducts();
+  hideResult();
+}
+
+function removeDeduct(i) {
+  deducts.splice(i, 1);
+  renderDeducts();
+  hideResult();
+}
+
+function renderDeducts() {
+  const list = document.getElementById('deductList');
+  if (deducts.length === 0) {
+    list.innerHTML = '<div class="empty-hint">추가된 공제 항목이 없습니다</div>';
+    return;
+  }
+  list.innerHTML = deducts.map((d, i) => `
+    <div class="deduct-item">
+      <span class="item-label">${d.label}</span>
+      <span class="item-name-badge">${d.name}</span>
+      <span class="item-amount">− ${fmt(d.amount)} 원</span>
+      <button class="item-del" data-idx="${i}">✕</button>
+    </div>`).join('');
+}
+
+/* ─── 계산 ─────────────────────────────────────────────
+  로직:
+  1) 전체 비용을 1/N → 기본값은 Math.floor
+  2) 나머지(1원 단위)는 랜덤으로 추첨한 인원에게 부담 → 당첨/꽝 표시
+  3) 공제는 해당 인원 부담금에서만 차감
+──────────────────────────────────────────────────────── */
+function calculate() {
+  if (names.length < 1) { showError('인원을 1명 이상 등록해 주세요.'); return; }
+  if (costs.length < 1) { showError('정산 항목을 1개 이상 추가해 주세요.'); return; }
+  clearError();
+
+  const totalCost   = costs.reduce((s, c) => s + c.amount, 0);
+  const totalDeduct = deducts.reduce((s, d) => s + d.amount, 0);
+  const n           = names.length;
+
+  // ① 1/N 기본 배분: 모두 Math.floor 금액으로 시작
+  const base       = Math.floor(totalCost / n);
+  const extraWon   = totalCost % n;  // 남은 원 단위 (0 ~ n-1)
+
+  // ② 나머지 extraWon원을 랜덤 추첨 인원에게 부담
+  //    → 인덱스 배열을 섞어서 앞 extraWon명이 1원 추가
+  const shuffled = [...Array(n).keys()].sort(() => Math.random() - 0.5);
+  const hitSet   = new Set(shuffled.slice(0, extraWon));  // 1원 더 내는 인원 인덱스
+
+  const baseMap = {};
+  names.forEach((name, i) => {
+    baseMap[name] = hitSet.has(i) ? base + 1 : base;
+  });
+
+  // ③ 인원별 공제 합산
+  const deductMap = {};
+  names.forEach(name => { deductMap[name] = 0; });
+  deducts.forEach(d => { deductMap[d.name] += d.amount; });
+
+  // ④ 최종 = 기본 부담금 - 개인 공제
+  const finalMap = {};
+  names.forEach(name => { finalMap[name] = baseMap[name] - deductMap[name]; });
+
+  // ── 결과 렌더 ──
+  document.getElementById('rTotal').textContent  = fmt(totalCost) + '원';
+  document.getElementById('rDeduct').textContent = totalDeduct > 0 ? '−' + fmt(totalDeduct) + '원' : '없음';
+  document.getElementById('rCount').textContent  = n + '명';
+
+  // 당첨 문구 랜덤 풀
+  const hitLines  = ['아쉽게도 당첨'];
+  const safeLines = ['면제'];
+
+  document.getElementById('personRows').innerHTML = names.map((name, i) => {
+    const final   = finalMap[name];
+    const ded     = deductMap[name];
+    const isHit   = hitSet.has(i);
+    const reduced = ded > 0;
+    const isNeg   = final < 0;
+    const badgeText = extraWon > 0
+      ? (isHit
+          ? hitLines[Math.floor(Math.random() * hitLines.length)]
+          : safeLines[Math.floor(Math.random() * safeLines.length)])
+      : null;
+
+    return `
+      <div class="person-row ${isHit && extraWon > 0 ? 'is-hit' : ''}">
+        <div class="person-left">
+          <div class="person-num">${String(i+1).padStart(2,'0')}</div>
+          <div class="person-name">${name}</div>
+          ${badgeText ? `<span class="lottery-badge ${isHit ? 'badge-hit' : 'badge-safe'}">${badgeText}</span>` : ''}
+          ${reduced ? `<span class="person-deduct-badge">−${fmt(ded)}원 공제</span>` : ''}
+        </div>
+        <div class="person-amount ${reduced ? 'reduced' : ''}">
+          ${isNeg ? '<span style="font-size:13px;color:#f87f8a;">환급 </span>' : ''}${fmt(final)}<span class="won-unit">원</span>
+        </div>
+      </div>`;
+  }).join('');
+
+  // 분배 내역 카드 구성
+  const hitNames  = names.filter((_, i) => hitSet.has(i));
+  const safeNames = names.filter((_, i) => !hitSet.has(i));
+
+  let noteHTML = '<div class="note-title">분배 내역</div>';
+
+  // 기본 1/N
+  noteHTML += `
+    <div class="note-row">
+      <span class="n-label">총 비용</span>
+      <span class="n-val">${fmt(totalCost)}원</span>
+    </div>
+    <div class="note-row">
+      <span class="n-label">인원</span>
+      <span class="n-val">${n}명</span>
+    </div>
+    <div class="note-row">
+      <span class="n-label">기본 1인당</span>
+      <span class="n-val">${fmt(base)}원</span>
+    </div>`;
+
+  // 나머지 추첨 내역
+  if (extraWon > 0) {
+    noteHTML += `
+    <div class="note-row highlight">
+      <span class="n-label">나머지 ${extraWon}원 추첨 당첨</span>
+      <span class="n-val">${hitNames.join(', ')} → ${fmt(base + 1)}원</span>
+    </div>
+    <div class="note-row">
+      <span class="n-label">나머지 면제</span>
+      <span class="n-val">${safeNames.length > 0 ? safeNames.join(', ') + ' → ' + fmt(base) + '원' : '없음'}</span>
+    </div>`;
+  }
+
+  // 공제 내역
+  if (totalDeduct > 0) {
+    deducts.forEach(d => {
+      noteHTML += `
+    <div class="note-row deduct-row">
+      <span class="n-label">${d.label} (${d.name})</span>
+      <span class="n-val">−${fmt(d.amount)}원 공제</span>
+    </div>`;
+    });
+  }
+
+  document.getElementById('rNote').innerHTML = noteHTML;
+
+  const rc = document.getElementById('resultCard');
+  rc.classList.add('show');
+  rc.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+/* ─── 초기화 ─── */
+function resetAll() {
+  names = []; costs = []; deducts = [];
+  ['nameInput','costLabel','costAmount','deductLabel','deductAmount']
+    .forEach(id => { document.getElementById(id).value = ''; });
+  renderNames();
+  renderCosts();
+  renderDeducts();
+  updateDeductSelect();
+  hideResult();
+  clearError();
+}
+
+/* ─── 금액 필드 숫자만 입력 허용 ─── */
+['costAmount', 'deductAmount'].forEach(id => {
+  const el = document.getElementById(id);
+  el.addEventListener('input', function() {
+    // 숫자 이외 문자 제거
+    this.value = this.value.replace(/[^0-9]/g, '');
+  });
+});
+
+/* ─── 키보드 네비게이션 ─── */
+// nameInput : Tab → costLabel(정산 항목명),  Enter → addName
+document.getElementById('nameInput').addEventListener('keydown', function(e) {
+  if (e.isComposing) return;
+  if (e.key === 'Tab')   { e.preventDefault(); document.getElementById('costLabel').focus(); }
+  if (e.key === 'Enter') { e.preventDefault(); addName(); }
+});
+
+// costLabel(항목명) : Tab → costAmount(금액),  Enter → costAmount(금액)
+document.getElementById('costLabel').addEventListener('keydown', function(e) {
+  if (e.isComposing) return;
+  if (e.key === 'Tab' || e.key === 'Enter') { e.preventDefault(); document.getElementById('costAmount').focus(); }
+});
+
+// costAmount(금액) : Tab → deductLabel(공제 사유),  Enter → 항목 추가 후 항목명으로 복귀
+// requestAnimationFrame: 현재 렌더 사이클 후 포커스 이동 → IME 컨텍스트 초기화 방지
+document.getElementById('costAmount').addEventListener('keydown', function(e) {
+  if (e.key === 'Tab')   { e.preventDefault(); requestAnimationFrame(() => document.getElementById('deductLabel').focus()); }
+  if (e.key === 'Enter') { e.preventDefault(); addCost(); requestAnimationFrame(() => document.getElementById('costLabel').focus()); }
+});
+
+// deductLabel: Enter → deductName(공제 대상 선택)
+document.getElementById('deductLabel').addEventListener('keydown', function(e) {
+  if (e.isComposing) return;
+  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('deductName').focus(); }
+});
+
+// deductAmount: Enter → addDeduct
+document.getElementById('deductAmount').addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') { e.preventDefault(); addDeduct(); }
+});
+
+/* ─── 버튼 이벤트 - onclick 대신 addEventListener로 모바일 호환 ─── */
+document.getElementById('btnAddName').addEventListener('click', addName);
+document.getElementById('btnAddCost').addEventListener('click', addCost);
+document.getElementById('btnAddDeduct').addEventListener('click', addDeduct);
+document.getElementById('btnCalc').addEventListener('click', calculate);
+document.getElementById('btnReset').addEventListener('click', resetAll);
+
+/* 동적으로 생성되는 삭제 버튼들은 이벤트 위임으로 처리 */
+document.getElementById('costList').addEventListener('click', function(e) {
+  const btn = e.target.closest('.item-del');
+  if (!btn) return;
+  const idx = parseInt(btn.dataset.idx);
+  removeCost(idx);
+});
+document.getElementById('deductList').addEventListener('click', function(e) {
+  const btn = e.target.closest('.item-del');
+  if (!btn) return;
+  const idx = parseInt(btn.dataset.idx);
+  removeDeduct(idx);
+});
+document.getElementById('nameTags').addEventListener('click', function(e) {
+  const btn = e.target.closest('.tag-del');
+  if (!btn) return;
+  const idx = parseInt(btn.dataset.idx);
+  removeName(idx);
+});
+</script>
+</body>
+</html>
