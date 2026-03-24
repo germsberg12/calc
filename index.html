@@ -6,6 +6,7 @@
 <title>정산기</title>
 <link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -18,10 +19,12 @@
   --accent:   #2b5ce6;
   --accent-h: #1a45c4;
   --danger:   #e63946;
-  --success:  #2d7d46;
   --text:     #1a1a1a;
   --muted:    #7a7670;
   --tag-bg:   #e8e3d8;
+  --fuel:     #e67e22;
+  --fuel-bg:  #fef3e8;
+  --fuel-br:  #f5c99a;
 }
 
 body {
@@ -31,56 +34,20 @@ body {
   min-height: 100vh;
   padding: 48px 20px 100px;
 }
-
-/* 배경 패턴 */
 body::before {
   content: '';
-  position: fixed;
-  inset: 0;
+  position: fixed; inset: 0;
   background-image: radial-gradient(circle, #c8c2b4 1px, transparent 1px);
   background-size: 28px 28px;
   opacity: 0.35;
-  pointer-events: none;
-  z-index: 0;
+  pointer-events: none; z-index: 0;
 }
-
-.wrap {
-  max-width: 580px;
-  margin: 0 auto;
-  position: relative;
-  z-index: 1;
-}
+.wrap { max-width: 580px; margin: 0 auto; position: relative; z-index: 1; }
 
 /* ── 헤더 ── */
-.header {
-  margin-bottom: 44px;
-}
-.header-eyebrow {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 4px;
-  color: var(--muted);
-  text-transform: uppercase;
-  margin-bottom: 12px;
-}
-.header h1 {
-  font-size: 48px;
-  font-weight: 900;
-  letter-spacing: -2px;
-  line-height: 1;
-  color: var(--text);
-}
-.header h1 em {
-  font-style: normal;
-  color: var(--accent);
-}
-.header p {
-  margin-top: 12px;
-  font-size: 14px;
-  color: var(--muted);
-  font-weight: 400;
-  line-height: 1.6;
-}
+.header { margin-bottom: 44px; }
+.header h1 { font-size: 48px; font-weight: 900; letter-spacing: -2px; line-height: 1; }
+.header h1 em { font-style: normal; color: var(--accent); }
 
 /* ── 카드 ── */
 .card {
@@ -92,106 +59,131 @@ body::before {
   box-shadow: 0 2px 12px rgba(0,0,0,0.05);
 }
 .card-title {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--muted);
+  font-size: 12px; font-weight: 700; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--muted);
   margin-bottom: 20px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  display: flex; align-items: center; gap: 8px;
 }
 .card-title .step {
-  width: 22px; height: 22px;
-  background: var(--accent);
-  color: #fff;
-  border-radius: 6px;
-  font-size: 11px;
-  font-weight: 800;
+  width: 22px; height: 22px; background: var(--accent); color: #fff;
+  border-radius: 6px; font-size: 11px; font-weight: 800;
   display: flex; align-items: center; justify-content: center;
-  letter-spacing: 0;
-  flex-shrink: 0;
+  letter-spacing: 0; flex-shrink: 0;
 }
 
-/* ── 기본 입력 ── */
-.input-row {
-  display: flex;
-  gap: 8px;
+/* ── 탭 (2개) ── */
+.tab-group { display: flex; gap: 6px; margin-bottom: 16px; }
+.tab-btn {
+  flex: 1; padding: 9px 6px;
+  border: 1.5px solid var(--border); border-radius: 10px;
+  background: var(--surface); color: var(--muted);
+  font-family: inherit; font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: all 0.15s;
+  display: flex; align-items: center; justify-content: center; gap: 5px;
 }
+.tab-btn:hover { border-color: var(--border2); color: var(--text); }
+.tab-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.tab-btn.active.fuel-tab { background: var(--fuel); border-color: var(--fuel); }
+
+/* ── 패널 ── */
+.input-panel { display: none; }
+.input-panel.active { display: block; }
+
+/* ── 일반 항목 패널 ── */
+.general-panel-inner { display: flex; gap: 8px; }
+
+/* ── 유류비·톨비 패널 ── */
+.fuel-panel-inner {
+  background: var(--fuel-bg);
+  border: 1.5px solid var(--fuel-br);
+  border-radius: 14px;
+  padding: 16px;
+  display: flex; flex-direction: column; gap: 10px;
+}
+
+/* 유류비/톨비 종류 토글 */
+.fuel-type-toggle {
+  display: flex;
+  border: 1.5px solid var(--fuel-br);
+  border-radius: 10px; overflow: hidden;
+  align-self: flex-start;
+}
+.fuel-type-btn {
+  padding: 8px 18px; border: none; background: var(--fuel-bg);
+  color: var(--fuel); font-family: inherit; font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: background 0.15s, color 0.15s; white-space: nowrap;
+}
+.fuel-type-btn + .fuel-type-btn { border-left: 1.5px solid var(--fuel-br); }
+.fuel-type-btn.active { background: var(--fuel); color: #fff; }
+
+.fuel-label-row { display: flex; gap: 8px; }
+
+/* 편도/왕복 토글 */
+.trip-toggle {
+  display: flex;
+  border: 1.5px solid var(--fuel-br);
+  border-radius: 10px; overflow: hidden; flex-shrink: 0;
+}
+.trip-btn {
+  padding: 10px 14px; border: none; background: var(--fuel-bg);
+  color: var(--fuel); font-family: inherit; font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: background 0.15s, color 0.15s; white-space: nowrap;
+}
+.trip-btn + .trip-btn { border-left: 1.5px solid var(--fuel-br); }
+.trip-btn.active { background: var(--fuel); color: #fff; }
+
+.fuel-amount-row { display: flex; gap: 8px; align-items: center; }
+.fuel-calc-hint {
+  font-size: 12px; color: var(--fuel);
+  font-family: 'DM Mono', monospace; font-weight: 600;
+  white-space: nowrap; flex-shrink: 0;
+}
+
+/* ── 공통 입력 ── */
+.input-row { display: flex; gap: 8px; }
 .inp {
-  flex: 1;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: 12px;
-  color: var(--text);
-  font-family: inherit;
-  font-size: 15px;
-  font-weight: 500;
-  padding: 12px 14px;
-  outline: none;
+  flex: 1; background: var(--surface);
+  border: 1.5px solid var(--border); border-radius: 12px;
+  color: var(--text); font-family: inherit;
+  font-size: 15px; font-weight: 500;
+  padding: 12px 14px; outline: none;
   transition: border-color 0.15s, background 0.15s;
 }
 .inp:focus { border-color: var(--accent); background: #fff; }
 .inp::placeholder { color: #b0ab9f; font-weight: 400; font-size: 14px; }
-.inp-num {
-  font-family: 'DM Mono', monospace;
-  font-size: 16px;
-}
+.inp-num { font-family: 'DM Mono', monospace; font-size: 16px; }
 .inp-num::-webkit-outer-spin-button,
 .inp-num::-webkit-inner-spin-button { -webkit-appearance: none; }
 .inp-num { -moz-appearance: textfield; }
+.fuel-panel-inner .inp:focus { border-color: var(--fuel); }
 
 /* ── 버튼 ── */
 .btn-add {
-  width: 46px; height: 46px;
-  border: none;
-  border-radius: 12px;
-  background: var(--accent);
-  color: #fff;
-  font-size: 22px;
-  font-weight: 300;
-  cursor: pointer;
+  width: 46px; height: 46px; border: none; border-radius: 12px;
+  background: var(--accent); color: #fff;
+  font-size: 22px; font-weight: 300; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  transition: background 0.15s, transform 0.1s;
-  line-height: 1;
+  flex-shrink: 0; transition: background 0.15s, transform 0.1s; line-height: 1;
 }
 .btn-add:hover { background: var(--accent-h); }
 .btn-add:active { transform: scale(0.93); }
+.btn-add.fuel-add { background: var(--fuel); }
+.btn-add.fuel-add:hover { background: #c96a10; }
 
 /* ── 태그 ── */
-.tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 14px;
-  min-height: 10px;
-}
+.tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; min-height: 10px; }
 .tag {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: var(--tag-bg);
-  border: 1px solid var(--border);
-  border-radius: 100px;
-  padding: 5px 10px 5px 12px;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--tag-bg); border: 1px solid var(--border);
+  border-radius: 100px; padding: 5px 10px 5px 12px;
+  font-size: 13px; font-weight: 600; color: var(--text);
   animation: popIn 0.18s cubic-bezier(0.34,1.56,0.64,1);
 }
 .tag-del {
-  width: 17px; height: 17px;
-  border-radius: 50%;
-  border: none;
-  background: var(--border2);
-  color: var(--muted);
-  font-size: 10px;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  transition: background 0.1s, color 0.1s;
-  padding: 0;
+  width: 17px; height: 17px; border-radius: 50%; border: none;
+  background: var(--border2); color: var(--muted); font-size: 10px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background 0.1s, color 0.1s; padding: 0;
 }
 .tag-del:hover { background: var(--danger); color: #fff; }
 
@@ -200,443 +192,246 @@ body::before {
   to   { opacity: 1; transform: scale(1); }
 }
 
-.count-hint {
-  margin-top: 10px;
-  font-size: 12px;
-  color: var(--muted);
-}
+.count-hint { margin-top: 10px; font-size: 12px; color: var(--muted); }
 .count-hint b { color: var(--accent); font-weight: 700; }
 
-/* ── 항목 리스트 (정산/공제) ── */
-.item-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 14px;
-}
-
-/* 정산 항목 행 */
+/* ── 정산 항목 리스트 ── */
+.item-list { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
 .cost-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 12px;
+  display: flex; align-items: center; gap: 8px;
+  border: 1px solid var(--border); border-radius: 12px;
   padding: 12px 14px;
   animation: popIn 0.18s cubic-bezier(0.34,1.56,0.64,1);
 }
+.cost-item.type-general { background: var(--surface); }
+.cost-item.type-fuel,
+.cost-item.type-toll    { background: var(--fuel-bg); border-color: var(--fuel-br); }
+.item-type-badge {
+  font-size: 10px; font-weight: 800; border-radius: 6px;
+  padding: 2px 6px; flex-shrink: 0; letter-spacing: 0.5px;
+}
+.type-general .item-type-badge { display: none; }
+.type-fuel .item-type-badge,
+.type-toll .item-type-badge    { background: var(--fuel); color: #fff; }
 .cost-item .item-label {
-  flex: 1;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
-  min-width: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  flex: 1; font-size: 14px; font-weight: 600; color: var(--text);
+  min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .cost-item .item-amount {
-  font-family: 'DM Mono', monospace;
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--accent);
-  flex-shrink: 0;
-  white-space: nowrap;
+  font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500;
+  flex-shrink: 0; white-space: nowrap;
 }
+.type-general .item-amount { color: var(--accent); }
+.type-fuel .item-amount,
+.type-toll .item-amount    { color: var(--fuel); }
 .cost-item .item-del {
-  width: 22px; height: 22px;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  color: var(--border2);
-  font-size: 14px;
-  cursor: pointer;
+  width: 22px; height: 22px; border-radius: 6px; border: none;
+  background: transparent; color: var(--border2); font-size: 14px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  transition: background 0.1s, color 0.1s;
-  padding: 0;
+  flex-shrink: 0; transition: background 0.1s, color 0.1s; padding: 0;
 }
 .cost-item .item-del:hover { background: #fce8ea; color: var(--danger); }
 
-/* 공제 항목 행 */
-.deduct-form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 4px;
-}
-.deduct-form .row2 {
-  display: flex;
-  gap: 8px;
-}
-.select-wrap {
-  position: relative;
-  flex: 1;
-}
+/* ── 공제 UI ── */
+.deduct-form { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.select-wrap { position: relative; flex: 1; }
 .select-wrap select {
-  width: 100%;
-  appearance: none;
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: 12px;
-  color: var(--text);
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 500;
-  padding: 12px 36px 12px 14px;
-  outline: none;
-  cursor: pointer;
-  transition: border-color 0.15s;
+  width: 100%; appearance: none;
+  background: var(--surface); border: 1.5px solid var(--border);
+  border-radius: 12px; color: var(--text); font-family: inherit;
+  font-size: 14px; font-weight: 500; padding: 12px 36px 12px 14px;
+  outline: none; cursor: pointer; transition: border-color 0.15s;
 }
 .select-wrap select:focus { border-color: var(--accent); }
 .select-wrap::after {
-  content: '▾';
-  position: absolute;
-  right: 13px; top: 50%;
-  transform: translateY(-50%);
-  font-size: 12px;
-  color: var(--muted);
-  pointer-events: none;
+  content: '▾'; position: absolute; right: 13px; top: 50%;
+  transform: translateY(-50%); font-size: 12px; color: var(--muted); pointer-events: none;
 }
+.deduct-preview {
+  background: #fff5f5; border: 1.5px solid #f7c5c9;
+  border-radius: 12px; padding: 12px 14px; display: none;
+}
+.deduct-preview.show { display: block; }
+.deduct-preview-title {
+  font-size: 11px; font-weight: 700; color: #b06070;
+  letter-spacing: 1px; text-transform: uppercase; margin-bottom: 8px;
+}
+.deduct-preview-calc { font-size: 14px; color: var(--text); line-height: 1.7; }
+.deduct-preview-calc b { color: var(--danger); font-family: 'DM Mono', monospace; }
+.deduct-preview-note { font-size: 12px; color: #b06070; margin-top: 6px; }
 
 .deduct-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #fff5f5;
-  border: 1px solid #f7c5c9;
-  border-radius: 12px;
-  padding: 12px 14px;
+  display: flex; align-items: center; gap: 8px;
+  background: #fff5f5; border: 1px solid #f7c5c9;
+  border-radius: 12px; padding: 12px 14px;
   animation: popIn 0.18s cubic-bezier(0.34,1.56,0.64,1);
 }
+.deduct-item .item-info { display: flex; flex-direction: column; flex: 1; min-width: 0; }
 .deduct-item .item-label {
-  flex: 1;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text);
+  font-size: 14px; font-weight: 600; color: var(--text);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+.deduct-item .item-sub { font-size: 11px; color: #b06070; font-weight: 500; margin-top: 2px; }
 .deduct-item .item-name-badge {
-  font-size: 11px;
-  font-weight: 700;
-  background: #fce8ea;
-  color: var(--danger);
-  border-radius: 6px;
-  padding: 2px 7px;
-  flex-shrink: 0;
+  font-size: 11px; font-weight: 700; background: #fce8ea; color: var(--danger);
+  border-radius: 6px; padding: 2px 7px; flex-shrink: 0; white-space: nowrap;
 }
 .deduct-item .item-amount {
-  font-family: 'DM Mono', monospace;
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--danger);
-  flex-shrink: 0;
+  font-family: 'DM Mono', monospace; font-size: 15px; font-weight: 500;
+  color: var(--danger); flex-shrink: 0; white-space: nowrap;
 }
 .deduct-item .item-del {
-  width: 22px; height: 22px;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  color: #f7c5c9;
-  font-size: 14px;
-  cursor: pointer;
+  width: 22px; height: 22px; border-radius: 6px; border: none;
+  background: transparent; color: #f7c5c9; font-size: 14px; cursor: pointer;
   display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
-  transition: background 0.1s, color 0.1s;
-  padding: 0;
+  flex-shrink: 0; transition: background 0.1s, color 0.1s; padding: 0;
 }
 .deduct-item .item-del:hover { background: #fce8ea; color: var(--danger); }
 
-.empty-hint {
-  font-size: 13px;
-  color: #b0ab9f;
-  text-align: center;
-  padding: 10px 0 4px;
+.deduct-confirm-row { display: none; }
+.deduct-confirm-row.show { display: flex; gap: 8px; }
+.btn-deduct-add {
+  flex: 1; padding: 13px; border: none; border-radius: 12px;
+  background: var(--danger); color: #fff;
+  font-family: inherit; font-size: 14px; font-weight: 700;
+  cursor: pointer; transition: background 0.15s, transform 0.1s;
 }
+.btn-deduct-add:hover  { background: #c82333; }
+.btn-deduct-add:active { transform: scale(0.98); }
+
+.empty-hint { font-size: 13px; color: #b0ab9f; text-align: center; padding: 10px 0 4px; }
 
 /* ── 계산 버튼 ── */
 .calc-btn {
-  width: 100%;
-  padding: 18px;
-  border: none;
-  border-radius: 16px;
-  background: var(--accent);
-  color: #fff;
-  font-family: inherit;
-  font-size: 16px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-  cursor: pointer;
-  margin-top: 8px;
-  transition: background 0.15s, transform 0.1s;
+  width: 100%; padding: 18px; border: none; border-radius: 16px;
+  background: var(--accent); color: #fff; font-family: inherit;
+  font-size: 16px; font-weight: 700; letter-spacing: 0.5px;
+  cursor: pointer; margin-top: 8px; transition: background 0.15s, transform 0.1s;
 }
 .calc-btn:hover { background: var(--accent-h); }
 .calc-btn:active { transform: scale(0.98); }
 
 /* ── 에러 ── */
-.error-msg {
-  font-size: 12px;
-  color: var(--danger);
-  margin-top: 8px;
-  display: none;
-  font-weight: 500;
-}
+.error-msg { font-size: 12px; color: var(--danger); margin-top: 8px; display: none; font-weight: 500; }
 .error-msg.show { display: block; }
 
 /* ── 결과 카드 ── */
 .result-card {
-  background: var(--text);
-  border-radius: 24px;
-  padding: 32px 28px;
-  margin-top: 20px;
-  display: none;
+  background: var(--text); border-radius: 24px;
+  padding: 32px 28px; margin-top: 20px; display: none;
   animation: slideUp 0.3s cubic-bezier(0.22,1,0.36,1);
   box-shadow: 0 8px 40px rgba(0,0,0,0.18);
 }
 .result-card.show { display: block; }
-
 @keyframes slideUp {
   from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
 }
-
-.result-eyebrow {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 4px;
-  color: #666;
-  text-transform: uppercase;
-  margin-bottom: 6px;
-}
-.result-title {
-  font-size: 26px;
-  font-weight: 900;
-  color: #fff;
-  letter-spacing: -0.5px;
-  margin-bottom: 24px;
-}
-
-/* 요약 줄 */
-.result-summary {
-  display: flex;
-  gap: 0;
-  margin-bottom: 24px;
-  border: 1px solid #333;
-  border-radius: 14px;
-  overflow: hidden;
-}
-.summary-item {
-  flex: 1;
-  padding: 14px 16px;
-  border-right: 1px solid #333;
-}
+.result-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 4px; color: #666; text-transform: uppercase; margin-bottom: 6px; }
+.result-title { font-size: 26px; font-weight: 900; color: #fff; letter-spacing: -0.5px; margin-bottom: 24px; }
+.result-summary { display: flex; margin-bottom: 24px; border: 1px solid #333; border-radius: 14px; overflow: hidden; }
+.summary-item { flex: 1; padding: 14px 16px; border-right: 1px solid #333; }
 .summary-item:last-child { border-right: none; }
-.summary-item .s-label {
-  font-size: 11px;
-  color: #666;
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-bottom: 5px;
-}
-.summary-item .s-val {
-  font-family: 'DM Mono', monospace;
-  font-size: 17px;
-  font-weight: 500;
-  color: #fff;
-}
-
-/* 인원별 결과 */
-.result-section-label {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 3px;
-  color: #555;
-  text-transform: uppercase;
-  margin-bottom: 12px;
-}
-.person-rows {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+.summary-item .s-label { font-size: 11px; color: #666; font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
+.summary-item .s-val { font-family: 'DM Mono', monospace; font-size: 17px; font-weight: 500; color: #fff; }
+.result-section-label { font-size: 11px; font-weight: 700; letter-spacing: 3px; color: #555; text-transform: uppercase; margin-bottom: 12px; }
+.person-rows { display: flex; flex-direction: column; gap: 8px; }
 .person-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 16px 18px;
-  border-radius: 14px;
-  background: #222;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 18px; border-radius: 14px; background: #222;
   animation: slideUp 0.3s ease both;
 }
-.person-row:nth-child(1) { animation-delay: 0.05s; }
-.person-row:nth-child(2) { animation-delay: 0.09s; }
-.person-row:nth-child(3) { animation-delay: 0.13s; }
-.person-row:nth-child(4) { animation-delay: 0.17s; }
-.person-row:nth-child(5) { animation-delay: 0.21s; }
-.person-row:nth-child(6) { animation-delay: 0.25s; }
-.person-row:nth-child(7) { animation-delay: 0.29s; }
-.person-row:nth-child(8) { animation-delay: 0.33s; }
-
-.person-left {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
+.person-row:nth-child(1){animation-delay:.05s} .person-row:nth-child(2){animation-delay:.09s}
+.person-row:nth-child(3){animation-delay:.13s} .person-row:nth-child(4){animation-delay:.17s}
+.person-row:nth-child(5){animation-delay:.21s} .person-row:nth-child(6){animation-delay:.25s}
+.person-row:nth-child(7){animation-delay:.29s} .person-row:nth-child(8){animation-delay:.33s}
+.person-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .person-num {
-  width: 26px; height: 26px;
-  border-radius: 8px;
-  background: #333;
-  color: #888;
-  font-size: 11px;
-  font-weight: 700;
+  width: 26px; height: 26px; border-radius: 8px;
+  background: #333; color: #888; font-size: 11px; font-weight: 700;
   font-family: 'DM Mono', monospace;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
-.person-name {
-  font-size: 15px;
-  font-weight: 700;
-  color: #fff;
-}
-.person-deduct-badge {
-  font-size: 11px;
-  background: #3d1a1d;
-  color: #f87f8a;
-  border-radius: 6px;
-  padding: 2px 7px;
-  font-weight: 600;
-}
-.person-amount {
-  font-family: 'DM Mono', monospace;
-  font-size: 20px;
-  font-weight: 500;
-  color: #fff;
-}
-.person-amount.reduced {
-  color: #f87f8a;
-}
-.person-amount .won-unit {
-  font-size: 13px;
-  color: #555;
-  margin-left: 2px;
-}
-
-.result-note {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid #2a2a2a;
-}
-.note-title {
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 3px;
-  color: #555;
-  text-transform: uppercase;
-  margin-bottom: 12px;
-}
+.person-name { font-size: 15px; font-weight: 700; color: #fff; }
+.person-deduct-badge { font-size: 11px; background: #3d1a1d; color: #f87f8a; border-radius: 6px; padding: 2px 7px; font-weight: 600; }
+.person-amount { font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 500; color: #fff; flex-shrink: 0; }
+.person-amount.reduced { color: #f87f8a; }
+.person-amount .won-unit { font-size: 13px; color: #555; margin-left: 2px; }
+.result-note { margin-top: 20px; padding-top: 20px; border-top: 1px solid #2a2a2a; }
+.note-title { font-size: 11px; font-weight: 700; letter-spacing: 3px; color: #555; text-transform: uppercase; margin-bottom: 12px; }
 .note-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 10px 14px;
-  border-radius: 10px;
-  margin-bottom: 6px;
-  background: #1a1a1a;
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 14px; border-radius: 10px; margin-bottom: 6px; background: #1a1a1a;
 }
 .note-row:last-child { margin-bottom: 0; }
-.note-row .n-label {
-  font-size: 13px;
-  color: #666;
-  font-family: 'DM Mono', monospace;
-}
-.note-row .n-val {
-  font-size: 13px;
-  font-weight: 600;
-  color: #aaa;
-  font-family: 'DM Mono', monospace;
-}
-.note-row.highlight {
-  background: #1e1a00;
-  border: 1px solid #4a3800;
-}
+.note-row .n-label { font-size: 13px; color: #666; font-family: 'DM Mono', monospace; }
+.note-row .n-val   { font-size: 13px; font-weight: 600; color: #aaa; font-family: 'DM Mono', monospace; }
+.note-row.highlight { background: #1e1a00; border: 1px solid #4a3800; }
 .note-row.highlight .n-label { color: #887040; }
 .note-row.highlight .n-val   { color: #ffb347; font-weight: 700; }
-.note-row.deduct-row {
-  background: #1a0d0f;
-  border: 1px solid #3d1a1d;
-}
+.note-row.deduct-row { background: #1a0d0f; border: 1px solid #3d1a1d; }
 .note-row.deduct-row .n-label { color: #7a3a40; }
 .note-row.deduct-row .n-val   { color: #f87f8a; font-weight: 700; }
 
-/* ── 초기화 버튼 ── */
+/* ── 이미지 저장 ── */
+.share-area { margin-top: 20px; padding-top: 20px; border-top: 1px solid #2a2a2a; }
+.btn-save-img {
+  width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 15px; border: 1.5px solid #3a3a3a; border-radius: 14px;
+  background: #2a2a2a; color: #fff; font-family: inherit;
+  font-size: 14px; font-weight: 700; cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+}
+.btn-save-img:hover  { background: #333; border-color: #555; }
+.btn-save-img:active { transform: scale(0.98); }
+.btn-save-img svg { width: 18px; height: 18px; flex-shrink: 0; }
+.btn-save-img.loading { opacity: 0.6; cursor: wait; pointer-events: none; }
+
+/* ── 토스트 ── */
+.toast {
+  position: fixed; bottom: 32px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #1a1a1a; color: #fff;
+  font-size: 13px; font-weight: 600; padding: 12px 22px;
+  border-radius: 100px; box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  opacity: 0; transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none; z-index: 9999; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+/* ── 초기화 ── */
 .reset-btn {
-  width: 100%;
-  padding: 14px;
-  border: 1.5px solid var(--border2);
-  border-radius: 12px;
-  background: transparent;
-  color: var(--muted);
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  margin-top: 12px;
-  transition: border-color 0.15s, color 0.15s;
+  width: 100%; padding: 14px;
+  border: 1.5px solid var(--border2); border-radius: 12px;
+  background: transparent; color: var(--muted);
+  font-family: inherit; font-size: 13px; font-weight: 600;
+  cursor: pointer; margin-top: 12px; transition: border-color 0.15s, color 0.15s;
 }
 .reset-btn:hover { border-color: var(--text); color: var(--text); }
 
-/* ── 모바일 반응형 ── */
+/* ── 모바일 ── */
 @media (max-width: 480px) {
   body { padding: 24px 14px 80px; }
-
   .header h1 { font-size: 36px; }
-
   .card { padding: 20px 16px; }
-
-  /* 정산 항목: 항목명+금액+버튼을 2줄로 */
-  #costRow {
-    flex-wrap: wrap;
-  }
-  #costRow #costLabel  { flex: 1 1 100%; }
-  #costRow #costAmount { flex: 1 1 calc(100% - 58px); }
-
-  /* 공제 섹션: 세로 배치 */
-  .deduct-form .row2 {
-    flex-wrap: wrap;
-  }
-  .deduct-form .row2 .select-wrap { flex: 1 1 100%; }
-  .deduct-form .row2 #deductAmount { flex: 1 1 calc(100% - 58px); max-width: none !important; }
-
-  /* 버튼 터치 영역 확보 */
-  .btn-add { width: 46px; height: 46px; min-width: 46px; }
-
-  /* 결과 요약 글자 크기 */
-  .summary-item .s-val { font-size: 14px; }
-  .summary-item .s-label { font-size: 10px; }
-
-  /* 인원별 결과 */
+  .tab-btn { font-size: 12px; }
+  .trip-btn { padding: 10px 10px; font-size: 12px; }
+  .fuel-type-btn { padding: 8px 12px; font-size: 12px; }
   .person-amount { font-size: 16px; }
   .person-name   { font-size: 13px; }
-
-  /* 배지 줄바꿈 허용 */
-  .person-left { flex-wrap: wrap; gap: 6px; }
-
-  /* 분배 내역 */
-  .note-row .n-label,
-  .note-row .n-val { font-size: 11px; }
+  .note-row .n-label, .note-row .n-val { font-size: 11px; }
+  .summary-item .s-val { font-size: 14px; }
 }
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <!-- 헤더 -->
   <div class="header">
     <h1><em>정산기</em></h1>
   </div>
 
-  <!-- STEP 1 인원 -->
+  <!-- STEP 1: 인원 -->
   <div class="card">
     <div class="card-title"><span class="step">1</span> 인원 등록</div>
     <div class="input-row">
@@ -647,49 +442,116 @@ body::before {
     <div class="count-hint" id="nameHint">현재 <b>0</b>명 등록됨</div>
   </div>
 
-  <!-- STEP 2 정산 항목 -->
+  <!-- STEP 2: 정산 항목 -->
   <div class="card">
     <div class="card-title"><span class="step">2</span> 정산 항목</div>
-    <div class="input-row" id="costRow">
-      <input class="inp" type="text" id="costLabel" placeholder="항목명 (예: 숙박, 식사, 렌터카)" maxlength="20" lang="ko" inputmode="text">
-      <input class="inp inp-num" type="text" inputmode="numeric" id="costAmount" placeholder="금액">
-      <button class="btn-add" id="btnAddCost">+</button>
+
+    <!-- 탭: 일반 / 유류비·톨비 -->
+    <div class="tab-group">
+      <button class="tab-btn active"   id="tabGeneral">📋 일반 항목</button>
+      <button class="tab-btn fuel-tab" id="tabFuel">⛽ 유류비 · 톨비</button>
     </div>
+
+    <!-- 일반 항목 패널 -->
+    <div class="input-panel active" id="panelGeneral">
+      <div class="general-panel-inner">
+        <input class="inp" type="text" id="genLabel" placeholder="항목명 (예: 숙박, 식사)" maxlength="20" lang="ko" inputmode="text">
+        <input class="inp inp-num" type="text" inputmode="numeric" id="genAmount" placeholder="금액">
+        <button class="btn-add" id="btnAddGeneral">+</button>
+      </div>
+    </div>
+
+    <!-- 유류비·톨비 패널 -->
+    <div class="input-panel" id="panelFuel">
+      <div class="fuel-panel-inner">
+
+        <!-- 유류비 / 톨비 종류 선택 -->
+        <div class="fuel-type-toggle">
+          <button class="fuel-type-btn active" id="fuelTypeA">⛽ 유류비</button>
+          <button class="fuel-type-btn"        id="fuelTypeB">🛣️ 톨비</button>
+        </div>
+
+        <!-- 메모 + 편도/왕복 -->
+        <div class="fuel-label-row">
+          <input class="inp" type="text" id="fuelLabel"
+                 placeholder="메모 (예: 서울→부산, 경부고속)" maxlength="20" lang="ko" inputmode="text" style="flex:1;">
+          <div class="trip-toggle">
+            <button class="trip-btn active" id="tripOne">편도</button>
+            <button class="trip-btn"        id="tripTwo">왕복</button>
+          </div>
+        </div>
+
+        <!-- 금액 + 왕복 힌트 + 추가 버튼 -->
+        <div class="fuel-amount-row">
+          <input class="inp inp-num" type="text" inputmode="numeric" id="fuelAmount" placeholder="금액 입력">
+          <span class="fuel-calc-hint" id="fuelHint"></span>
+          <button class="btn-add fuel-add" id="btnAddFuel">+</button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 추가된 항목 목록 -->
     <div class="item-list" id="costList">
-      <div class="empty-hint" id="costEmpty">추가된 항목이 없습니다</div>
+      <div class="empty-hint">추가된 항목이 없습니다</div>
     </div>
   </div>
 
-  <!-- STEP 3 공제 항목 -->
+  <!-- STEP 3: 공제 항목 -->
   <div class="card">
-    <div class="card-title"><span class="step">3</span> 공제 항목 <span style="font-size:11px;font-weight:400;letter-spacing:0;text-transform:none;color:#b0ab9f;">(선택 · 특정 인원 부담금 차감)</span></div>
-    <div class="deduct-form">
-      <div class="input-row">
-        <input class="inp" type="text" id="deductLabel" placeholder="공제 사유 (예: 쿠폰 사용, 사전 결제)" maxlength="20" lang="ko" inputmode="text">
-      </div>
-      <div class="row2">
-        <div class="select-wrap">
-          <select id="deductName">
-            <option value="">— 공제 대상 선택 —</option>
-          </select>
-        </div>
-        <input class="inp inp-num" type="text" inputmode="numeric" id="deductAmount" placeholder="공제 금액" style="max-width:140px;">
-        <button class="btn-add" id="btnAddDeduct" style="background:#e63946;">−</button>
-      </div>
+    <div class="card-title">
+      <span class="step">3</span> 공제 항목
+      <span style="font-size:11px;font-weight:400;letter-spacing:0;text-transform:none;color:#b0ab9f;">(선택 · 특정 인원 몫 면제)</span>
     </div>
+
+    <div class="deduct-form">
+
+      <!-- ① 공제 대상 -->
+      <div class="select-wrap">
+        <select id="deductName">
+          <option value="">① 공제 대상 선택</option>
+        </select>
+      </div>
+
+      <!-- ② 공제 사유 -->
+      <input class="inp" type="text" id="deductLabel"
+             placeholder="② 공제 사유 (예: 쿠폰 사용, 운전자 면제)"
+             maxlength="20" lang="ko" inputmode="text"
+             disabled style="opacity:0.4;cursor:not-allowed;">
+
+      <!-- ③ 공제받을 정산 항목 -->
+      <div class="select-wrap" id="deductCostWrap" style="display:none;">
+        <select id="deductCostItem">
+          <option value="">③ 공제받을 정산 항목 선택</option>
+        </select>
+      </div>
+
+      <!-- 자동 계산 미리보기 -->
+      <div class="deduct-preview" id="deductPreview">
+        <div class="deduct-preview-title">공제 미리보기</div>
+        <div class="deduct-preview-calc" id="deductPreviewCalc"></div>
+        <div class="deduct-preview-note" id="deductPreviewNote"></div>
+      </div>
+
+      <!-- 공제 추가 버튼 -->
+      <div class="deduct-confirm-row" id="deductConfirmRow">
+        <button class="btn-deduct-add" id="btnAddDeduct">− 공제 항목 추가</button>
+      </div>
+
+    </div>
+
     <div class="item-list" id="deductList">
-      <div class="empty-hint" id="deductEmpty">추가된 공제 항목이 없습니다</div>
+      <div class="empty-hint">추가된 공제 항목이 없습니다</div>
     </div>
   </div>
 
   <div class="error-msg" id="errorMsg"></div>
   <button class="calc-btn" id="btnCalc">✦ 정산 계산하기</button>
 
-  <!-- 결과 -->
+  <!-- 결과 카드 -->
   <div class="result-card" id="resultCard">
     <div class="result-eyebrow">Settlement Result</div>
     <div class="result-title">정산 결과</div>
-
     <div class="result-summary">
       <div class="summary-item">
         <div class="s-label">총 비용</div>
@@ -704,21 +566,32 @@ body::before {
         <div class="s-val" id="rCount">—</div>
       </div>
     </div>
-
     <div class="result-section-label">인원별 최종 부담금</div>
     <div class="person-rows" id="personRows"></div>
     <div class="result-note" id="rNote"></div>
+    <div class="share-area" id="shareArea">
+      <button class="btn-save-img" id="btnSaveImg">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        이미지로 저장
+      </button>
+    </div>
   </div>
 
   <button class="reset-btn" id="btnReset">↺ 전체 초기화</button>
-
 </div>
+<div class="toast" id="toast"></div>
+
 <script>
 let names   = [];
 let costs   = [];
 let deducts = [];
+let costSeq = 0;
 
-/* ─── 유틸 ─── */
 const fmt = n => Math.abs(n).toLocaleString('ko-KR');
 
 function showError(msg) {
@@ -726,14 +599,13 @@ function showError(msg) {
   el.textContent = '⚠ ' + msg;
   el.classList.add('show');
 }
-function clearError() {
-  document.getElementById('errorMsg').classList.remove('show');
-}
-function hideResult() {
-  document.getElementById('resultCard').classList.remove('show');
-}
+function clearError() { document.getElementById('errorMsg').classList.remove('show'); }
+function hideResult()  { document.getElementById('resultCard').classList.remove('show'); }
 
-/* ─── STEP 1: 인원 ─── */
+
+/* ════════════════════════════════════════════
+   STEP 1: 인원
+   ════════════════════════════════════════════ */
 function addName() {
   const inp  = document.getElementById('nameInput');
   const name = inp.value.trim();
@@ -743,7 +615,8 @@ function addName() {
   inp.value = '';
   clearError();
   renderNames();
-  updateDeductSelect();
+  updateDeductNameSelect();
+  refreshDeductPreview();
   hideResult();
 }
 
@@ -753,217 +626,347 @@ function removeName(i) {
   deducts = deducts.filter(d => d.name !== removed);
   renderNames();
   renderDeducts();
-  updateDeductSelect();
+  updateDeductNameSelect();
+  refreshDeductPreview();
   hideResult();
 }
 
 function renderNames() {
   document.getElementById('nameTags').innerHTML =
-    names.map((n, i) => `
-      <span class="tag">
-        ${n}
-        <button class="tag-del" data-idx="${i}">✕</button>
-      </span>`).join('');
+    names.map((n, i) => `<span class="tag">${n}<button class="tag-del" data-idx="${i}">✕</button></span>`).join('');
   document.getElementById('nameHint').innerHTML = `현재 <b>${names.length}</b>명 등록됨`;
 }
 
-/* ─── STEP 2: 정산 항목 ─── */
-function addCost() {
-  const label  = document.getElementById('costLabel').value.trim();
-  const amount = parseInt(document.getElementById('costAmount').value) || 0;
-  if (!label)      { showError('항목명을 입력해 주세요.'); return; }
-  if (amount <= 0) { showError('금액은 1원 이상 입력해 주세요.'); return; }
-  costs.push({ label, amount });
-  document.getElementById('costLabel').value  = '';
-  document.getElementById('costAmount').value = '';
-  clearError();
-  renderCosts();
-  hideResult();
+
+/* ════════════════════════════════════════════
+   STEP 2: 탭 전환 (일반 ↔ 유류비·톨비)
+   ════════════════════════════════════════════ */
+function switchTab(tab) {
+  document.getElementById('tabGeneral').classList.toggle('active', tab === 'general');
+  document.getElementById('tabFuel').classList.toggle('active',    tab === 'fuel');
+  document.getElementById('panelGeneral').classList.toggle('active', tab === 'general');
+  document.getElementById('panelFuel').classList.toggle('active',    tab === 'fuel');
+}
+document.getElementById('tabGeneral').addEventListener('click', () => switchTab('general'));
+document.getElementById('tabFuel').addEventListener('click',    () => switchTab('fuel'));
+
+
+/* ════════════════════════════════════════════
+   STEP 2: 유류비 / 톨비 종류 토글
+   ════════════════════════════════════════════
+   패널 안에서 "유류비" or "톨비"를 고르는 버튼.
+   type 변수에 'fuel' 또는 'toll'이 저장됨.
+   ════════════════════════════════════════════ */
+let fuelSubType = 'fuel'; // 'fuel' = 유류비, 'toll' = 톨비
+
+document.getElementById('fuelTypeA').addEventListener('click', function() {
+  fuelSubType = 'fuel';
+  this.classList.add('active');
+  document.getElementById('fuelTypeB').classList.remove('active');
+  document.getElementById('fuelLabel').placeholder = '메모 (예: 서울→부산)';
+});
+document.getElementById('fuelTypeB').addEventListener('click', function() {
+  fuelSubType = 'toll';
+  this.classList.add('active');
+  document.getElementById('fuelTypeA').classList.remove('active');
+  document.getElementById('fuelLabel').placeholder = '메모 (예: 경부고속도로)';
+});
+
+
+/* ════════════════════════════════════════════
+   STEP 2: 편도·왕복 토글
+   ════════════════════════════════════════════ */
+let isRound = false;
+
+document.getElementById('tripOne').addEventListener('click', function() {
+  isRound = false;
+  this.classList.add('active');
+  document.getElementById('tripTwo').classList.remove('active');
+  updateTripHint();
+});
+document.getElementById('tripTwo').addEventListener('click', function() {
+  isRound = true;
+  this.classList.add('active');
+  document.getElementById('tripOne').classList.remove('active');
+  updateTripHint();
+});
+document.getElementById('fuelAmount').addEventListener('input', updateTripHint);
+
+function updateTripHint() {
+  const raw = parseInt(document.getElementById('fuelAmount').value) || 0;
+  document.getElementById('fuelHint').textContent =
+    (isRound && raw) ? `× 2 = ${fmt(raw * 2)}원` : '';
 }
 
-function removeCost(i) {
-  costs.splice(i, 1);
-  renderCosts();
-  hideResult();
+function resetTripToggle() {
+  isRound = false;
+  document.getElementById('tripOne').classList.add('active');
+  document.getElementById('tripTwo').classList.remove('active');
+  document.getElementById('fuelHint').textContent = '';
+}
+
+
+/* ════════════════════════════════════════════
+   STEP 2: 항목 추가
+   ════════════════════════════════════════════ */
+function addCostGeneral() {
+  const label     = document.getElementById('genLabel').value.trim();
+  const rawAmount = parseInt(document.getElementById('genAmount').value) || 0;
+  if (!label)       { showError('항목명을 입력해 주세요.'); return; }
+  if (rawAmount<=0) { showError('금액은 1원 이상 입력해 주세요.'); return; }
+
+  costs.push({ id: ++costSeq, type: 'general', label, amount: rawAmount });
+  document.getElementById('genLabel').value  = '';
+  document.getElementById('genAmount').value = '';
+  clearError(); renderCosts(); updateDeductCostSelect(); hideResult();
+}
+
+function addCostFuel() {
+  const memo      = document.getElementById('fuelLabel').value.trim();
+  const rawAmount = parseInt(document.getElementById('fuelAmount').value) || 0;
+  if (rawAmount<=0) { showError('금액을 입력해 주세요.'); return; }
+
+  const finalAmount = isRound ? rawAmount * 2 : rawAmount;
+  const tripLabel   = isRound ? '왕복' : '편도';
+  // 유류비인지 톨비인지에 따라 기본 라벨 결정
+  const baseName    = fuelSubType === 'fuel' ? '유류비' : '톨비';
+  const label       = memo ? `${memo} (${tripLabel})` : `${baseName} (${tripLabel})`;
+
+  costs.push({ id: ++costSeq, type: fuelSubType, label, amount: finalAmount });
+  document.getElementById('fuelLabel').value  = '';
+  document.getElementById('fuelAmount').value = '';
+  resetTripToggle();
+  clearError(); renderCosts(); updateDeductCostSelect(); hideResult();
+}
+
+function removeCost(id) {
+  costs   = costs.filter(c => c.id !== id);
+  deducts = deducts.filter(d => d.costId !== id);
+  renderCosts(); renderDeducts(); updateDeductCostSelect(); resetDeductForm(); hideResult();
 }
 
 function renderCosts() {
   const list = document.getElementById('costList');
-  if (costs.length === 0) {
-    list.innerHTML = '<div class="empty-hint">추가된 항목이 없습니다</div>';
-    return;
-  }
-  list.innerHTML = costs.map((c, i) => `
-    <div class="cost-item">
-      <span class="item-label">${c.label}</span>
-      <span class="item-amount">${fmt(c.amount)} 원</span>
-      <button class="item-del" data-idx="${i}">✕</button>
-    </div>`).join('');
+  if (!costs.length) { list.innerHTML = '<div class="empty-hint">추가된 항목이 없습니다</div>'; return; }
+  list.innerHTML = costs.map(c => {
+    const badge = c.type === 'fuel' ? '⛽ 유류비' : c.type === 'toll' ? '🛣️ 톨비' : '';
+    return `
+      <div class="cost-item type-${c.type}">
+        <span class="item-type-badge">${badge}</span>
+        <span class="item-label">${c.label}</span>
+        <span class="item-amount">${fmt(c.amount)} 원</span>
+        <button class="item-del" data-id="${c.id}">✕</button>
+      </div>`;
+  }).join('');
 }
 
-/* ─── STEP 3: 공제 항목 ─── */
-function updateDeductSelect() {
+
+/* ════════════════════════════════════════════
+   STEP 3: 공제 항목
+   ════════════════════════════════════════════ */
+function updateDeductNameSelect() {
   const sel = document.getElementById('deductName');
   const cur = sel.value;
-  sel.innerHTML = '<option value="">— 공제 대상 선택 —</option>' +
-    names.map(n => `<option value="${n}" ${n === cur ? 'selected' : ''}>${n}</option>`).join('');
+  sel.innerHTML = '<option value="">① 공제 대상 선택</option>' +
+    names.map(n => `<option value="${n}" ${n===cur?'selected':''}>${n}</option>`).join('');
+  if (!sel.value) resetDeductForm();
 }
+
+function updateDeductCostSelect() {
+  const sel = document.getElementById('deductCostItem');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">③ 공제받을 정산 항목 선택</option>' +
+    costs.map(c => `<option value="${c.id}" ${String(c.id)===cur?'selected':''}>${c.label} (${fmt(c.amount)}원)</option>`).join('');
+  refreshDeductPreview();
+}
+
+function refreshDeductPreview() {
+  const nameVal  = document.getElementById('deductName').value;
+  const costIdVal = parseInt(document.getElementById('deductCostItem')?.value);
+  const preview    = document.getElementById('deductPreview');
+  const calcEl     = document.getElementById('deductPreviewCalc');
+  const noteEl     = document.getElementById('deductPreviewNote');
+  const confirmRow = document.getElementById('deductConfirmRow');
+
+  if (!nameVal || !costIdVal || !costs.find(c => c.id === costIdVal)) {
+    preview.classList.remove('show');
+    confirmRow.classList.remove('show');
+    return;
+  }
+
+  const cost = costs.find(c => c.id === costIdVal);
+  const n    = names.length;
+  if (n < 1) { preview.classList.remove('show'); confirmRow.classList.remove('show'); return; }
+
+  // 공제 금액 = 항목 전체 금액 (이 사람 부담금에서 전액 차감)
+  const share  = cost.amount;
+  const others = n - 1;
+
+  calcEl.innerHTML =
+    `${cost.label} <b>${fmt(cost.amount)}원</b> 전액<br>` +
+    `→ <b>${nameVal}</b> 공제 금액: <b>− ${fmt(share)}원</b>`;
+
+  if (others > 0) {
+    // 이 사람이 전액 공제받으면, 나머지 인원이 총비용을 다시 N빵함
+    // (계산 결과에서 자연히 반영되므로 여기선 참고용 안내만)
+    noteEl.textContent = `${nameVal}님 부담금에서 ${fmt(share)}원이 차감됩니다.`;
+  } else {
+    noteEl.textContent = '';
+  }
+
+  preview.classList.add('show');
+  confirmRow.classList.add('show');
+}
+
+document.getElementById('deductName').addEventListener('change', function() {
+  const hasName  = !!this.value;
+  const labelInp = document.getElementById('deductLabel');
+  labelInp.disabled      = !hasName;
+  labelInp.style.opacity = hasName ? '1' : '0.4';
+  labelInp.style.cursor  = hasName ? '' : 'not-allowed';
+  document.getElementById('deductCostWrap').style.display = hasName ? '' : 'none';
+  if (!hasName) resetDeductForm();
+  else { updateDeductCostSelect(); refreshDeductPreview(); }
+});
+
+document.getElementById('deductCostItem').addEventListener('change', refreshDeductPreview);
 
 function addDeduct() {
-  const label  = document.getElementById('deductLabel').value.trim();
   const name   = document.getElementById('deductName').value;
-  const amount = parseInt(document.getElementById('deductAmount').value) || 0;
-  if (!label)      { showError('공제 사유를 입력해 주세요.'); return; }
-  if (!name)       { showError('공제 대상을 선택해 주세요.'); return; }
-  if (amount <= 0) { showError('공제 금액은 1원 이상 입력해 주세요.'); return; }
-  deducts.push({ label, name, amount });
-  document.getElementById('deductLabel').value  = '';
-  document.getElementById('deductName').value   = '';
-  document.getElementById('deductAmount').value = '';
-  clearError();
-  renderDeducts();
-  hideResult();
+  const label  = document.getElementById('deductLabel').value.trim();
+  const costId = parseInt(document.getElementById('deductCostItem').value);
+
+  if (!name)   { showError('공제 대상을 선택해 주세요.'); return; }
+  if (!label)  { showError('공제 사유를 입력해 주세요.'); return; }
+  if (!costId) { showError('공제받을 정산 항목을 선택해 주세요.'); return; }
+
+  const cost = costs.find(c => c.id === costId);
+  if (!cost) { showError('선택한 항목을 찾을 수 없습니다.'); return; }
+
+  const n = names.length;
+  if (n < 1) { showError('인원을 먼저 등록해 주세요.'); return; }
+
+  if (deducts.find(d => d.costId === costId && d.name === name)) {
+    showError(`${name}님은 이미 "${cost.label}" 항목에서 공제 중입니다.`); return;
+  }
+
+  // 공제 금액 = 항목 전체 금액 그대로
+  const amount = cost.amount;
+  deducts.push({ costId, costLabel: cost.label, name, label, amount });
+
+  document.getElementById('deductName').value  = '';
+  document.getElementById('deductLabel').value = '';
+  resetDeductForm();
+  clearError(); renderDeducts(); hideResult();
 }
 
-function removeDeduct(i) {
-  deducts.splice(i, 1);
-  renderDeducts();
-  hideResult();
-}
+function removeDeduct(i) { deducts.splice(i, 1); renderDeducts(); hideResult(); }
 
 function renderDeducts() {
   const list = document.getElementById('deductList');
-  if (deducts.length === 0) {
-    list.innerHTML = '<div class="empty-hint">추가된 공제 항목이 없습니다</div>';
-    return;
-  }
+  if (!deducts.length) { list.innerHTML = '<div class="empty-hint">추가된 공제 항목이 없습니다</div>'; return; }
   list.innerHTML = deducts.map((d, i) => `
     <div class="deduct-item">
-      <span class="item-label">${d.label}</span>
+      <div class="item-info">
+        <span class="item-label">${d.label}</span>
+        <span class="item-sub">${d.costLabel} · ${d.name} 전액 공제</span>
+      </div>
       <span class="item-name-badge">${d.name}</span>
       <span class="item-amount">− ${fmt(d.amount)} 원</span>
       <button class="item-del" data-idx="${i}">✕</button>
     </div>`).join('');
 }
 
-/* ─── 계산 ─────────────────────────────────────────────
-  로직:
-  1) 전체 비용을 1/N → 기본값은 Math.floor
-  2) 나머지(1원 단위)는 랜덤으로 추첨한 인원에게 부담 → 당첨/꽝 표시
-  3) 공제는 해당 인원 부담금에서만 차감
-──────────────────────────────────────────────────────── */
+function resetDeductForm() {
+  document.getElementById('deductCostWrap').style.display = 'none';
+  document.getElementById('deductPreview').classList.remove('show');
+  document.getElementById('deductConfirmRow').classList.remove('show');
+  if (document.getElementById('deductCostItem'))
+    document.getElementById('deductCostItem').value = '';
+  const labelInp = document.getElementById('deductLabel');
+  labelInp.disabled      = true;
+  labelInp.style.opacity = '0.4';
+  labelInp.style.cursor  = 'not-allowed';
+}
+
+
+/* ════════════════════════════════════════════
+   계산
+   ════════════════════════════════════════════ */
 function calculate() {
   if (names.length < 1) { showError('인원을 1명 이상 등록해 주세요.'); return; }
-  if (costs.length < 1) { showError('정산 항목을 1개 이상 추가해 주세요.'); return; }
+  if (costs.length  < 1) { showError('정산 항목을 1개 이상 추가해 주세요.'); return; }
   clearError();
 
   const totalCost   = costs.reduce((s, c) => s + c.amount, 0);
   const totalDeduct = deducts.reduce((s, d) => s + d.amount, 0);
   const n           = names.length;
+  const base        = Math.floor(totalCost / n);
+  const extraWon    = totalCost % n;
 
-  // ① 1/N 기본 배분: 모두 Math.floor 금액으로 시작
-  const base       = Math.floor(totalCost / n);
-  const extraWon   = totalCost % n;  // 남은 원 단위 (0 ~ n-1)
-
-  // ② 나머지 extraWon원을 랜덤 추첨 인원에게 부담
-  //    → 인덱스 배열을 섞어서 앞 extraWon명이 1원 추가
   const shuffled = [...Array(n).keys()].sort(() => Math.random() - 0.5);
-  const hitSet   = new Set(shuffled.slice(0, extraWon));  // 1원 더 내는 인원 인덱스
+  const hitSet   = new Set(shuffled.slice(0, extraWon));
 
-  const baseMap = {};
-  names.forEach((name, i) => {
-    baseMap[name] = hitSet.has(i) ? base + 1 : base;
-  });
-
-  // ③ 인원별 공제 합산
+  const baseMap   = {};
   const deductMap = {};
-  names.forEach(name => { deductMap[name] = 0; });
+  names.forEach((name, i) => { baseMap[name] = hitSet.has(i) ? base + 1 : base; deductMap[name] = 0; });
   deducts.forEach(d => { deductMap[d.name] += d.amount; });
 
-  // ④ 최종 = 기본 부담금 - 개인 공제
   const finalMap = {};
   names.forEach(name => { finalMap[name] = baseMap[name] - deductMap[name]; });
 
-  // ── 결과 렌더 ──
   document.getElementById('rTotal').textContent  = fmt(totalCost) + '원';
   document.getElementById('rDeduct').textContent = totalDeduct > 0 ? '−' + fmt(totalDeduct) + '원' : '없음';
   document.getElementById('rCount').textContent  = n + '명';
 
-  // 당첨 문구 랜덤 풀
-  const hitLines  = ['아쉽게도 당첨'];
-  const safeLines = ['면제'];
-
   document.getElementById('personRows').innerHTML = names.map((name, i) => {
-    const final   = finalMap[name];
-    const ded     = deductMap[name];
-    const isHit   = hitSet.has(i);
-    const reduced = ded > 0;
-    const isNeg   = final < 0;
-    const badgeText = extraWon > 0
-      ? (isHit
-          ? hitLines[Math.floor(Math.random() * hitLines.length)]
-          : safeLines[Math.floor(Math.random() * safeLines.length)])
-      : null;
-
+    const final = finalMap[name], ded = deductMap[name];
+    const isHit = hitSet.has(i), reduced = ded > 0, isNeg = final < 0;
+    const badge = extraWon > 0 ? (isHit ? '아쉽게도 당첨' : '면제') : null;
     return `
-      <div class="person-row ${isHit && extraWon > 0 ? 'is-hit' : ''}">
+      <div class="person-row">
         <div class="person-left">
           <div class="person-num">${String(i+1).padStart(2,'0')}</div>
           <div class="person-name">${name}</div>
-          ${badgeText ? `<span class="lottery-badge ${isHit ? 'badge-hit' : 'badge-safe'}">${badgeText}</span>` : ''}
+          ${badge   ? `<span class="lottery-badge ${isHit?'badge-hit':'badge-safe'}">${badge}</span>` : ''}
           ${reduced ? `<span class="person-deduct-badge">−${fmt(ded)}원 공제</span>` : ''}
         </div>
-        <div class="person-amount ${reduced ? 'reduced' : ''}">
-          ${isNeg ? '<span style="font-size:13px;color:#f87f8a;">환급 </span>' : ''}${fmt(final)}<span class="won-unit">원</span>
+        <div class="person-amount ${reduced?'reduced':''}">
+          ${isNeg?'<span style="font-size:13px;color:#f87f8a;">환급 </span>':''}${fmt(final)}<span class="won-unit">원</span>
         </div>
       </div>`;
   }).join('');
 
-  // 분배 내역 카드 구성
-  const hitNames  = names.filter((_, i) => hitSet.has(i));
+  const hitNames  = names.filter((_, i) =>  hitSet.has(i));
   const safeNames = names.filter((_, i) => !hitSet.has(i));
 
   let noteHTML = '<div class="note-title">분배 내역</div>';
-
-  // 기본 1/N
+  costs.forEach(c => {
+    noteHTML += `<div class="note-row"><span class="n-label">${c.label}</span><span class="n-val">${fmt(c.amount)}원</span></div>`;
+  });
   noteHTML += `
-    <div class="note-row">
-      <span class="n-label">총 비용</span>
-      <span class="n-val">${fmt(totalCost)}원</span>
-    </div>
-    <div class="note-row">
-      <span class="n-label">인원</span>
-      <span class="n-val">${n}명</span>
-    </div>
-    <div class="note-row">
-      <span class="n-label">기본 1인당</span>
-      <span class="n-val">${fmt(base)}원</span>
-    </div>`;
-
-  // 나머지 추첨 내역
+    <div class="note-row"><span class="n-label">합계</span><span class="n-val">${fmt(totalCost)}원</span></div>
+    <div class="note-row"><span class="n-label">인원</span><span class="n-val">${n}명</span></div>
+    <div class="note-row"><span class="n-label">기본 1인당</span><span class="n-val">${fmt(base)}원</span></div>`;
   if (extraWon > 0) {
     noteHTML += `
     <div class="note-row highlight">
       <span class="n-label">나머지 ${extraWon}원 추첨 당첨</span>
-      <span class="n-val">${hitNames.join(', ')} → ${fmt(base + 1)}원</span>
+      <span class="n-val">${hitNames.join(', ')} → ${fmt(base+1)}원</span>
     </div>
     <div class="note-row">
       <span class="n-label">나머지 면제</span>
-      <span class="n-val">${safeNames.length > 0 ? safeNames.join(', ') + ' → ' + fmt(base) + '원' : '없음'}</span>
+      <span class="n-val">${safeNames.length ? safeNames.join(', ')+' → '+fmt(base)+'원' : '없음'}</span>
     </div>`;
   }
-
-  // 공제 내역
   if (totalDeduct > 0) {
     deducts.forEach(d => {
-      noteHTML += `
-    <div class="note-row deduct-row">
-      <span class="n-label">${d.label} (${d.name})</span>
-      <span class="n-val">−${fmt(d.amount)}원 공제</span>
-    </div>`;
+      noteHTML += `<div class="note-row deduct-row">
+        <span class="n-label">${d.label} · ${d.costLabel} (${d.name})</span>
+        <span class="n-val">−${fmt(d.amount)}원</span>
+      </div>`;
     });
   }
-
   document.getElementById('rNote').innerHTML = noteHTML;
 
   const rc = document.getElementById('resultCard');
@@ -971,86 +974,124 @@ function calculate() {
   rc.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 
-/* ─── 초기화 ─── */
+
+/* ════════════════════════════════════════════
+   초기화
+   ════════════════════════════════════════════ */
 function resetAll() {
-  names = []; costs = []; deducts = [];
-  ['nameInput','costLabel','costAmount','deductLabel','deductAmount']
+  names = []; costs = []; deducts = []; costSeq = 0;
+  ['nameInput','genLabel','genAmount','fuelLabel','fuelAmount']
     .forEach(id => { document.getElementById(id).value = ''; });
-  renderNames();
-  renderCosts();
-  renderDeducts();
-  updateDeductSelect();
-  hideResult();
-  clearError();
+
+  // 유류비·톨비 토글 초기화
+  fuelSubType = 'fuel';
+  document.getElementById('fuelTypeA').classList.add('active');
+  document.getElementById('fuelTypeB').classList.remove('active');
+  document.getElementById('fuelLabel').placeholder = '메모 (예: 서울→부산)';
+  resetTripToggle();
+
+  document.getElementById('deductName').value  = '';
+  document.getElementById('deductLabel').value = '';
+  resetDeductForm();
+  switchTab('general');
+  renderNames(); renderCosts(); renderDeducts(); updateDeductNameSelect(); hideResult(); clearError();
 }
 
-/* ─── 금액 필드 숫자만 입력 허용 ─── */
-['costAmount', 'deductAmount'].forEach(id => {
-  const el = document.getElementById(id);
-  el.addEventListener('input', function() {
-    // 숫자 이외 문자 제거
+
+/* ════════════════════════════════════════════
+   숫자만 허용
+   ════════════════════════════════════════════ */
+['genAmount','fuelAmount'].forEach(id => {
+  document.getElementById(id).addEventListener('input', function() {
     this.value = this.value.replace(/[^0-9]/g, '');
   });
 });
 
-/* ─── 키보드 네비게이션 ─── */
-// nameInput : Tab → costLabel(정산 항목명),  Enter → addName
+
+/* ════════════════════════════════════════════
+   버튼 이벤트
+   ════════════════════════════════════════════ */
+document.getElementById('btnAddName').addEventListener('click', addName);
+document.getElementById('btnAddGeneral').addEventListener('click', addCostGeneral);
+document.getElementById('btnAddFuel').addEventListener('click',    addCostFuel);
+document.getElementById('btnAddDeduct').addEventListener('click',  addDeduct);
+document.getElementById('btnCalc').addEventListener('click',       calculate);
+document.getElementById('btnReset').addEventListener('click',      resetAll);
+
+/* 키보드 */
 document.getElementById('nameInput').addEventListener('keydown', function(e) {
   if (e.isComposing) return;
-  if (e.key === 'Tab')   { e.preventDefault(); document.getElementById('costLabel').focus(); }
-  if (e.key === 'Enter') { e.preventDefault(); addName(); }
+  if (e.key==='Enter') { e.preventDefault(); addName(); }
 });
-
-// costLabel(항목명) : Tab → costAmount(금액),  Enter → costAmount(금액)
-document.getElementById('costLabel').addEventListener('keydown', function(e) {
+document.getElementById('genLabel').addEventListener('keydown', function(e) {
   if (e.isComposing) return;
-  if (e.key === 'Tab' || e.key === 'Enter') { e.preventDefault(); document.getElementById('costAmount').focus(); }
+  if (e.key==='Enter') { e.preventDefault(); document.getElementById('genAmount').focus(); }
+});
+document.getElementById('genAmount').addEventListener('keydown', function(e) {
+  if (e.key==='Enter') { e.preventDefault(); addCostGeneral(); requestAnimationFrame(()=>document.getElementById('genLabel').focus()); }
+});
+document.getElementById('fuelAmount').addEventListener('keydown', function(e) {
+  if (e.key==='Enter') { e.preventDefault(); addCostFuel(); }
 });
 
-// costAmount(금액) : Tab → deductLabel(공제 사유),  Enter → 항목 추가 후 항목명으로 복귀
-// requestAnimationFrame: 현재 렌더 사이클 후 포커스 이동 → IME 컨텍스트 초기화 방지
-document.getElementById('costAmount').addEventListener('keydown', function(e) {
-  if (e.key === 'Tab')   { e.preventDefault(); requestAnimationFrame(() => document.getElementById('deductLabel').focus()); }
-  if (e.key === 'Enter') { e.preventDefault(); addCost(); requestAnimationFrame(() => document.getElementById('costLabel').focus()); }
-});
-
-// deductLabel: Enter → deductName(공제 대상 선택)
-document.getElementById('deductLabel').addEventListener('keydown', function(e) {
-  if (e.isComposing) return;
-  if (e.key === 'Enter') { e.preventDefault(); document.getElementById('deductName').focus(); }
-});
-
-// deductAmount: Enter → addDeduct
-document.getElementById('deductAmount').addEventListener('keydown', function(e) {
-  if (e.key === 'Enter') { e.preventDefault(); addDeduct(); }
-});
-
-/* ─── 버튼 이벤트 - onclick 대신 addEventListener로 모바일 호환 ─── */
-document.getElementById('btnAddName').addEventListener('click', addName);
-document.getElementById('btnAddCost').addEventListener('click', addCost);
-document.getElementById('btnAddDeduct').addEventListener('click', addDeduct);
-document.getElementById('btnCalc').addEventListener('click', calculate);
-document.getElementById('btnReset').addEventListener('click', resetAll);
-
-/* 동적으로 생성되는 삭제 버튼들은 이벤트 위임으로 처리 */
+/* 이벤트 위임 */
 document.getElementById('costList').addEventListener('click', function(e) {
-  const btn = e.target.closest('.item-del');
-  if (!btn) return;
-  const idx = parseInt(btn.dataset.idx);
-  removeCost(idx);
+  const btn = e.target.closest('.item-del'); if (!btn) return; removeCost(parseInt(btn.dataset.id));
 });
 document.getElementById('deductList').addEventListener('click', function(e) {
-  const btn = e.target.closest('.item-del');
-  if (!btn) return;
-  const idx = parseInt(btn.dataset.idx);
-  removeDeduct(idx);
+  const btn = e.target.closest('.item-del'); if (!btn) return; removeDeduct(parseInt(btn.dataset.idx));
 });
 document.getElementById('nameTags').addEventListener('click', function(e) {
-  const btn = e.target.closest('.tag-del');
-  if (!btn) return;
-  const idx = parseInt(btn.dataset.idx);
-  removeName(idx);
+  const btn = e.target.closest('.tag-del'); if (!btn) return; removeName(parseInt(btn.dataset.idx));
 });
+
+
+/* ════════════════════════════════════════════
+   이미지 저장
+   ════════════════════════════════════════════ */
+document.getElementById('btnSaveImg').addEventListener('click', async function () {
+  const btn = this, resultEl = document.getElementById('resultCard'), shareArea = document.getElementById('shareArea');
+  btn.classList.add('loading');
+  btn.textContent = '⏳ 캡처 중...';
+  shareArea.style.visibility = 'hidden';
+  await new Promise(r => setTimeout(r, 60));
+  try {
+    const canvas  = await html2canvas(resultEl, { backgroundColor: '#1a1a1a', scale: 2, useCORS: true, logging: false });
+    const link    = document.createElement('a');
+    const dateStr = new Date().toLocaleDateString('ko-KR').replace(/\.\s*/g, '-').replace(/-$/, '');
+    link.download = `정산결과_${dateStr}.png`;
+    link.href     = canvas.toDataURL('image/png');
+    link.click();
+    showToast('✅ 이미지가 저장되었습니다!');
+  } catch (err) {
+    showToast('이미지 저장에 실패했습니다.');
+    console.error(err);
+  } finally {
+    shareArea.style.visibility = '';
+    btn.classList.remove('loading');
+    btn.innerHTML = `
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" style="width:18px;height:18px;flex-shrink:0;">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/>
+        <line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+      이미지로 저장`;
+  }
+});
+
+
+/* ════════════════════════════════════════════
+   토스트
+   ════════════════════════════════════════════ */
+let toastTimer = null;
+function showToast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
+}
 </script>
 </body>
 </html>
